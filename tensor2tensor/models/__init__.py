@@ -34,6 +34,7 @@ from tensor2tensor.models import revnet
 from tensor2tensor.models import shake_shake
 from tensor2tensor.models import slicenet
 from tensor2tensor.models import transformer
+from tensor2tensor.models import capstrans
 from tensor2tensor.models import vanilla_gan
 from tensor2tensor.models import xception
 
