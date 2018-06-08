@@ -569,6 +569,9 @@ def transformer_prepare_encoder(inputs, target_space, hparams, features=None):
 
   Args:
     inputs: a Tensor.
+      sg: inputs here have been flattened to 3d
+        [batch, height, width, embed_size] ->
+        [batch, height*width, embed_size]
     target_space: a Tensor.
     hparams: run hyperparameters
     features: optionally pass the entire features dictionary as well.
@@ -595,8 +598,13 @@ def transformer_prepare_encoder(inputs, target_space, hparams, features=None):
   else:
     # Usual case - not a packed dataset.
     encoder_padding = common_attention.embedding_to_padding(encoder_input)
+    # sg: [batch_size, sentence_len]
     ignore_padding = common_attention.attention_bias_ignore_padding(
         encoder_padding)
+    # sg: [batch_size, 1, 1, sentence_len]
+    # an bias tensor to be added to attention logits
+    # for padded words, the biases equal -1e9
+    # non padded words equal 0
     encoder_self_attention_bias = ignore_padding
     encoder_decoder_attention_bias = ignore_padding
     inputs_position = None
@@ -607,11 +615,17 @@ def transformer_prepare_encoder(inputs, target_space, hparams, features=None):
   emb_target_space = common_layers.embedding(
       target_space,
       32,
+      # sg: 32 vocab_size (comments in fun, may be not exactly)
+      # this is because at current time t2t only have
+      # SpaceID in problem.py from 1 to 32
       ishape_static[-1],
+      # sg: embedding dimension
       name="target_space_embedding",
       dtype=tf.bfloat16 if hparams.activation_dtype == "bfloat16"
       else tf.float32)
+  # sg: [1,128] a dense vector to represent SpaceID
   emb_target_space = tf.reshape(emb_target_space, [1, 1, -1])
+  # sg: [1,1,128]
   encoder_input += emb_target_space
   if hparams.pos == "timing":
     if inputs_position is not None:

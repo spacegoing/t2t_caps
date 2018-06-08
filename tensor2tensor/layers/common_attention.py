@@ -466,6 +466,7 @@ def add_timing_signal_1d(x,
   Returns:
     a Tensor the same shape as x.
   """
+  # x: [batch, height*width, embed_size]
   length = common_layers.shape_list(x)[1]
   channels = common_layers.shape_list(x)[2]
   signal = get_timing_signal_1d(length, channels, min_timescale, max_timescale,
