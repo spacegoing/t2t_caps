@@ -113,7 +113,7 @@ class SymbolModality(modality.Modality):
       if self._model_hparams.multiply_embedding_mode == "sqrt_depth":
         ret *= self._body_input_depth**0.5
       ret *= tf.expand_dims(tf.to_float(tf.not_equal(x, 0)), -1)
-      return ret
+      return ret # sg: (batch_size, sentence_length, 1, dimension) (15,235,1,128)
 
   def bottom(self, x):
     self._bottom_was_called = True
@@ -613,6 +613,21 @@ class ClassLabelModality(modality.Modality):
 
   @property
   def name(self):
+    """
+    `self._vocab_size` is actually `self.num_classes` defined in `imdb.py
+    (problem inheretance class)`
+
+    this is because in `text_problems.py` `hparams()` defined:
+    `p.target_modality = (registry.Modalities.CLASS_LABEL, self.num_classes)`
+
+    in `t2t_model.py` `_create_modalities()`:
+    `target_modality_spec = (target_modality_name, target_modality_spec[1])`
+    where `target_modality_spec[1]` is `create_modality(self.num_classes)`
+
+    and called `registry.py`
+    `modality_full_name, vocab_size = modality_spec`
+    thus `self.num_classes` becomes `vocab_size`
+    """
     return "class_label_modality_%d_%d" % (self._vocab_size,
                                            self._body_input_depth)
 
@@ -637,15 +652,20 @@ class ClassLabelModality(modality.Modality):
 
     Args:
       body_output: A Tensor with shape [batch, ?, ?, body_output_size].
-
+      sg: imdb prob: (batch_size, sentence_length, 1, dimension) (15,235,1,128)
     Returns:
       a Tensors, each with shape [batch_size, ?, ?, vocab_size]
     """
     with tf.variable_scope(self.name):
       x = body_output
       x = tf.reduce_mean(x, axis=[1, 2], keep_dims=True)
+      # sg: imdb prob: average over all words in sentence
       res = tf.layers.dense(x, self._vocab_size)
-      return tf.expand_dims(res, 3)
+      # sg: imdb prob: self._vocab_size here is actually
+      # num_classes which is 2 in imdb problem
+      # res = X (15,1,1,128) * W (128, 2)
+      # res is (15,1,1,2)
+      return tf.expand_dims(res, 3) # sg: (15,1,1,1,2)
 
 
 @registry.register_class_label_modality("onehot")

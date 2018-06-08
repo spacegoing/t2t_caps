@@ -1410,6 +1410,12 @@ def average_sharded_losses(sharded_losses):
   losses = {}
   for loss_name in sorted(sharded_losses[0]):
     all_shards = [shard_losses[loss_name] for shard_losses in sharded_losses]
+    # sg: loss_name is "extra" or "training" etc.
+    # each shard_losses[loss_name] is a dict, which either contains
+    # (loss_numerator, loss_denominator) or only loss_numerator.
+    # the if clause check if it contains the (num den) tuple, if it
+    # does then calculate the batch loss by average over non-masked
+    # labels
     if isinstance(all_shards[0], tuple):
       sharded_num, sharded_den = zip(*all_shards)
       mean_loss = (

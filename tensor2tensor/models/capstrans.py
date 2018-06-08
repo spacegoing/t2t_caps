@@ -973,7 +973,7 @@ class CapstransEncoder(t2t_model.T2TModel):
         nonpadding=features_to_nonpadding(features, "inputs"))
     encoder_output = tf.expand_dims(encoder_output, 2)
 
+    # sg: (batch_size, sentence_length, 1, dimension) (15,235,1,128) the same
+    # size as "inputs" in `features` (transformed_features in model_fn) because
+    # of self attention
     return encoder_output
-
-
-
