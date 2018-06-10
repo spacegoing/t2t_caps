@@ -2676,6 +2676,7 @@ def multihead_attention(query_antecedent,
 
   Args:
     query_antecedent: a Tensor with shape [batch, length_q, channels]
+    # sg: channels here are embedding dimensions
     memory_antecedent: a Tensor with shape [batch, length_m, channels] or None
     bias: bias Tensor (see attention_bias())
     total_key_depth: an integer

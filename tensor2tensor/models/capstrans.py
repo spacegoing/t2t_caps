@@ -737,21 +737,22 @@ def transformer_encoder(encoder_input,
                        hparams.num_hidden_layers):
       with tf.variable_scope("layer_%d" % layer):
         with tf.variable_scope("self_attention"):
+          # sg: imdb comments
           y = common_attention.multihead_attention(
-              common_layers.layer_preprocess(x, hparams),
+              common_layers.layer_preprocess(x, hparams), # added layer norm
               None,
               encoder_self_attention_bias,
-              hparams.attention_key_channels or hparams.hidden_size,
-              hparams.attention_value_channels or hparams.hidden_size,
-              hparams.hidden_size,
-              hparams.num_heads,
-              hparams.attention_dropout,
-              attention_type=hparams.self_attention_type,
+              hparams.attention_key_channels or hparams.hidden_size, # 128
+              hparams.attention_value_channels or hparams.hidden_size, # 128
+              hparams.hidden_size, # 128
+              hparams.num_heads, # 4
+              hparams.attention_dropout, # 0.1
+              attention_type=hparams.self_attention_type, # 'dot_product'
               save_weights_to=save_weights_to,
-              max_relative_position=hparams.max_relative_position,
+              max_relative_position=hparams.max_relative_position, # 0
               make_image_summary=make_image_summary,
               dropout_broadcast_dims=attention_dropout_broadcast_dims,
-              max_length=hparams.get("max_length"))
+              max_length=hparams.get("max_length")) # 256
           x = common_layers.layer_postprocess(x, y, hparams)
         with tf.variable_scope("ffn"):
           y = transformer_ffn_layer(
