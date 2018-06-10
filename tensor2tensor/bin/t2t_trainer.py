@@ -117,6 +117,9 @@ flags.DEFINE_string("job-dir", None,
                     "DO NOT USE. Exists only for Cloud ML Engine to pass in "
                     "during hyperparameter tuning. Overrides --output_dir.")
 
+# sg config below #############################################################
+flags.DEFINE_string("visible_gpus", None,
+                    "CUDA_VISIBLE_DEVICES")
 
 def set_hparams_from_args(args):
   """Set hparams overrides from unparsed args list."""
@@ -331,6 +334,9 @@ def main(argv):
   trainer_lib.set_random_seed(FLAGS.random_seed)
   usr_dir.import_usr_dir(FLAGS.t2t_usr_dir)
   log_registry()
+
+  if FLAGS.visible_gpus:
+    os.environ["CUDA_VISIBLE_DEVICES"]=FLAGS.visible_gpus
 
   if FLAGS.cloud_mlengine:
     return cloud_mlengine.launch()
